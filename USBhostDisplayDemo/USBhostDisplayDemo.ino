@@ -16,7 +16,7 @@ String deviceType[] = {"UNKNOWN", "POINTER", "MOUSE", "RESERVED", "JOYSTICK", "G
 String keyboardstring;
 void setup(void) {
   Serial.begin(230400);
-  Serial1.begin(1000000, SERIAL_8N1, 16, 17);
+  Serial1.begin(400000, SERIAL_8N1, 16, 17);
   Serial.println("OK There");
   tft.init(240, 240);
   clearscreen();
