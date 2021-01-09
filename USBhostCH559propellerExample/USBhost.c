@@ -1,67 +1,3 @@
-// ------ Libraries and Definitions ------
-#include "simpletools.h"
-#include "lsm9ds1.h"
-#include "ssd1331.h"
-#include "bme680.h"
-
-// ------ Global Variables and Objects ------
-float __imuX, __imuY, __imuZ, __compI;
-
-screen *oledc;
-bme680 *gas_sensor;
-
-void init_ab(char *obj);
-
-int item;
-
-
-
-// ------ Main Program ------
-int main() {
-  imu_init(0, 0, 0, 0);
-  oledc = ssd1331_init(0, 0, 0, 0, 0, 96, 64);
-  gas_sensor = bme680_openSPI(0, 0, 0, 0);
-
-  item = (2 * 35);
-  bme680_heaterDisable(gas_sensor);
-  imu_readAccelCalculated(&__imuX, &__imuY, &__imuZ);
-  item = (int)(100.0 * __imuX);
-  item = (int)(100.0 * __imuY);
-  item = (int)(100.0 * __imuZ);
-
-}
-
-// ------ Functions ------
-void init_ab(char *obj) {
-    memset(obj->variables, 0, sizeof(obj->variables));
-    if (ab_cogid < 0) {
-      Params *params = (Params *) spinBinary;
-      uint16_t *dbase;
-      uint32_t *dat;
-      params->pbase += (uint16_t)(uint32_t) spinBinary - 4;
-      params->vbase = (uint16_t)(uint32_t) obj->variables;
-      params->dbase = (uint16_t)(uint32_t)(ab_stack + 2);
-      params->pcurr += (uint16_t)(uint32_t) spinBinary - 4;
-      params->dcurr = params->dbase + 28;
-      dbase = (uint16_t *)(uint32_t) params->dbase;
-      dbase[-4] = 2; // pbase + abort-trap + return-value
-      dbase[-3] = 0; // vbase (not used)
-      dbase[-2] = 0; // dbase (not used)
-      dbase[-1] = 0xfff9; // return address
-      *(uint32_t *) dbase = 0; // result
-      dat = (uint32_t *)(spinBinary + 0x0018);
-      *dat = (uint32_t) &ab_mailbox;
-      ab_rootVars = (uint8_t *)(uint32_t) params->vbase;
-      ab_pVarOffset = (uint16_t *)(spinBinary + 0x0016);
-      ab_cogid = cognew(SPINVM, spinBinary);
-    }
-    ++ab_refCnt;
-  }    
-
-
-
-
-/*
 #include "simpletools.h"                      // Include simple tools
 
 #include "fdserial.h"
@@ -185,4 +121,3 @@ void filterCommand(int buffLength, unsigned char *msgbuffer) {
       break;
   }
 }
-*/
