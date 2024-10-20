@@ -1,3 +1,4 @@
+.vscode/
 CH559USB.bin
 CH559USB.hex
 CH559USB.ihx
@@ -24,3 +25,13 @@ util.lst
 util.rel
 util.rst
 util.sym
+command.asm
+command.lst
+command.rel
+command.rst
+command.sym
+usbinput.asm
+usbinput.lst
+usbinput.rel
+usbinput.rst
+usbinput.sym
