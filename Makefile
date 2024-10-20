@@ -4,9 +4,9 @@ XRAM_LOC=0x0600
 CODE_SIZE=0xEFFF
 DFREQ_SYS=48000000
 
-SDCC?=sdcc
-PACKIHX?=packihx
-HEX2BIN=makebin
+SDCC?=$(SDCC_PATH)sdcc
+PACKIHX?=$(SDCC_PATH)packihx
+HEX2BIN=$(SDCC_PATH)makebin
 
 OBJECTS=main.rel util.rel USBHost.rel uart.rel
 
