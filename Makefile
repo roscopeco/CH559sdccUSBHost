@@ -8,7 +8,7 @@ SDCC?=$(SDCC_PATH)sdcc
 PACKIHX?=$(SDCC_PATH)packihx
 HEX2BIN=$(SDCC_PATH)makebin
 
-OBJECTS=main.rel util.rel USBHost.rel uart.rel
+OBJECTS=main.rel util.rel USBHost.rel uart.rel command.rel usbinput.rel
 
 all: $(PROJECT_NAME).bin
 
