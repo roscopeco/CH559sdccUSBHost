@@ -24,6 +24,8 @@
 #ifndef __ROSCO_KEYBOARD_COMMAND_H
 #define __ROSCO_KEYBOARD_COMMAND_H
 
+#include <stdint.h>
+#include <stdbool.h>
 #include "config.h"
 
 // Commands
@@ -89,7 +91,18 @@
 #define IDENT_MODE_ASCII    ((uint8_t)1)
 #define IDENT_MODE_USB      ((uint8_t)2)
 
-void init_state();
+#ifndef __COMPILE_COMMAND_C
+extern uint8_t cmd_key_mode;
+extern uint8_t cmd_key_mode;
+extern bool i2c_mode;
+extern bool enable_mouse_reports;
+extern bool uart_caps_led_on;
+extern bool have_mouse;
+extern uint16_t repeat_delay;
+extern uint8_t repeat_rate_limit;
+#endif
+
+void init_state(void);
 void process_command(int byte);
 
 #endif//__ROSCO_KEYBOARD_COMMAND_H

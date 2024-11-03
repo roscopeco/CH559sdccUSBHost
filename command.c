@@ -23,17 +23,20 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
+#define __COMPILE_COMMAND_C
+
 #include "command.h"
 
 static uint8_t current_command;
 
-bool uart_mode;
-bool i2c_mode;
-bool enable_mouse_reports;
-bool uart_caps_led_on;
-bool have_mouse;
-uint16_t repeat_delay;
-uint8_t repeat_rate_limit;
+uint8_t cmd_key_mode;
+bool cmd_i2c_mode;
+bool cmd_enable_mouse_reports;
+bool cmd_uart_caps_led_on;
+bool cmd_have_mouse;
+uint16_t cmd_repeat_delay;
+uint8_t cmd_repeat_rate_limit;
 
 int putchar(int c);
 
@@ -46,13 +49,13 @@ static inline void pow_set(const uint8_t led_mask, uint8_t brightness) {
 }
 
 void init_state() {
-    uart_mode = true;
-    i2c_mode = false;
-    enable_mouse_reports = false;
-    uart_caps_led_on = false;
-    have_mouse = false;
-    repeat_delay = 500;
-    repeat_rate_limit = 100;
+    cmd_key_mode = IDENT_MODE_ASCII;
+    cmd_i2c_mode = false;
+    cmd_enable_mouse_reports = false;
+    cmd_uart_caps_led_on = false;
+    cmd_have_mouse = false;
+    cmd_repeat_delay = 500;
+    cmd_repeat_rate_limit = 100;
 }
 
 void process_command(int byte) {
@@ -111,7 +114,7 @@ void process_command(int byte) {
             putchar(CMD_NAK);
             break;
         case CMD_MOUSE_STRM_OFF:
-                enable_mouse_reports = false;
+                cmd_enable_mouse_reports = false;
                 putchar(CMD_ACK);
             break;
         case CMD_MOUSE_REPORT:
@@ -164,15 +167,11 @@ void process_command(int byte) {
             putchar('k');
             putchar('b');
             putchar('d');
-            if (uart_mode) {
-                putchar(IDENT_MODE_ASCII);
-            } else {
-                putchar(IDENT_MODE_SCAN);
-            }
+            putchar(cmd_key_mode);            
             putchar(KEY_COUNT);
             putchar(LED_COUNT);
 
-            if (i2c_mode) {
+            if (cmd_i2c_mode) {
                 putchar(CAPABILITIES | CAP_I2C);
             } else {
                 putchar(CAPABILITIES | CAP_PS2);
@@ -205,7 +204,7 @@ void process_command(int byte) {
             break;
         case CMD_LED_CAPS:
             led_set(LED_CAPS, byte);
-            uart_caps_led_on = byte > 0;
+            cmd_uart_caps_led_on = byte > 0;
             putchar(CMD_ACK);
             current_command = 0;
             break;
@@ -230,20 +229,27 @@ void process_command(int byte) {
             current_command = 0;
             break;
         case CMD_MODE_SET:
-            if (byte == CMD_MODE_SCAN) {
-                uart_mode = false;
+            switch (byte) {
+            case CMD_MODE_SCAN:
+                cmd_key_mode = IDENT_MODE_SCAN;
                 putchar(CMD_ACK);
-            } else if (byte == CMD_MODE_ASCII) {
-                uart_mode = true;
-                enable_mouse_reports = false;
+                break;
+            case CMD_MODE_ASCII:
+                cmd_key_mode = IDENT_MODE_ASCII;
                 putchar(CMD_ACK);
-            } else {
+                break;
+            case CMD_MODE_USB:
+                cmd_key_mode = IDENT_MODE_USB;
+                putchar(CMD_ACK);
+                break;
+            default:
                 putchar(CMD_NAK);
+                break;
             }
             current_command = 0;
             break;
         case CMD_RPT_DELAY_SET:
-            repeat_delay = byte * 10;
+            cmd_repeat_delay = byte * 10;
             putchar(CMD_ACK);
             current_command = 0;
             break;
@@ -251,13 +257,13 @@ void process_command(int byte) {
             if (byte == 0) {
                 putchar(CMD_NAK);
             } else {
-                repeat_rate_limit = (uint8_t)(256 - byte);
+                cmd_repeat_rate_limit = (uint8_t)(256 - byte);
                 putchar(CMD_ACK);
             }
             current_command = 0;
             break;            
         case CMD_MOUSE_SET_RATE:
-            if (have_mouse) {
+            if (cmd_have_mouse) {
                 switch (byte) {
                 case 10:
                 case 20:
@@ -278,7 +284,7 @@ void process_command(int byte) {
             current_command = 0;
             break;
         case CMD_MOUSE_SET_RES:
-            if (have_mouse) {
+            if (cmd_have_mouse) {
                 if (byte >= 0 && byte < 5) {
                     // TODO wat do?
                     putchar(CMD_ACK);
@@ -291,7 +297,7 @@ void process_command(int byte) {
             current_command = 0;
             break;
         case CMD_MOUSE_SET_SCALE:
-            if (have_mouse) {
+            if (cmd_have_mouse) {
                 switch (byte) {
                 case CMD_MOUSE_SCL_11:
                     // TODO wat do?

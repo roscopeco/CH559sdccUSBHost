@@ -17,6 +17,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "command.h"
+
 #define DEVICE_TYPE_KEYBOARD        ((0x06))
 #define DEVICE_TYPE_MOUSE           ((0x02))
 
@@ -29,6 +31,9 @@
 #define DEBUGF(...)     (void)0
 #endif
 
+#define PAYLOAD_MODS_IDX    0
+#define PAYLOAD_KEY0_IDX    2
+
 #define K_BACKSPACE 0x2a
 #define K_CAPS      0x39
 #define K_RIGHT     0x4f
@@ -39,13 +44,59 @@
 #define K_A         0x04
 #define K_Z         0x1d
 
+#define M_LCTRL     0x01
+#define M_RCTRL     0x10
+#define M_ANYCTRL   ((M_LCTRL | M_RCTRL))
+
 #define M_LSHIFT    0x02
 #define M_RSHIFT    0x20
 #define M_ANYSHIFT  ((M_LSHIFT | M_RSHIFT))
 
-#define M_LCTRL     0x01
-#define M_RCTRL     0x10
-#define M_ANYCTRL   ((M_LCTRL | M_RCTRL))
+#define M_LALT      0x04
+#define M_RALT      0x40
+
+#define M_LGUI      0x08
+#define M_RGUI      0x80
+
+// rosco scancodes for modifiers
+#define RS_LSHIFT   0x41
+#define RS_RSHIFT   0x4d
+#define RS_LCTRL    0x51
+#define RS_RCTRL    0x5e
+#define RS_LALT     0x52
+#define RS_RALT     0x5c
+#define RS_LGUI     0x53
+#define RS_RGUI     0x5b
+
+// rosco scancode modifier for make codes
+#define RS_M_MAKE   0x80
+
+static const char usb_to_scan_lut[] = {
+    0x00, 0x00, 0x00, 0x00, 0x32, 0x47, 0x45, 0x34, 0x24, 0x35, 0x36, 0x37, 0x29, 0x38, 0x39, 0x3a, 
+    0x49, 0x48, 0x2a, 0x2b, 0x22, 0x25, 0x33, 0x26, 0x28, 0x46, 0x23, 0x44, 0x27, 0x43, 0x12, 0x13, 
+    0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x3e, 0x11, 0x1e, 0x21, 0x57, 0x1c, 0x1e, 0x2c, 
+    0x2d, 0x2e, 0x00, 0x3b, 0x3c, 0x42, 0x4a, 0x4b, 0x4c, 0x00, 0x1f, 0x2f, 0x3f, 0x4f, 0x5f, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+
+/* *** */
+/* TODO SUPPORT NUMPAD?
+    0x00, 0x00, 0x00, 0x00,  '/',  '*',  '-',  '+', 0x0d,  '1',  '2',  '3',  '4',  '5',  '6',  '7', 
+     '8',  '9',  '0',  '.', '\\', 0x00, 0x00,  '=', 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+*/ /* Replace these two lines if we do.... */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+/* *** */
+
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+};
 
 static const char usb_to_ascii_unshift_lut[] = {
     0x00, 0x00, 0x00, 0x00,  'a',  'b',  'c',  'd',  'e',  'f',  'g',  'h',  'i',  'j',  'k',  'l', 
@@ -115,11 +166,17 @@ static uint8_t key_times[256];
 
 static uint8_t  last_keys[6];       // 6KRO with boot protocol
 
+static uint8_t last_mods;
+
 static bool caps;
 
 int putchar(int c);
 
-static inline char map_usb_keycode(uint8_t code, uint8_t modifiers) {
+static inline char usb_to_scan_code(uint8_t code) {
+    return usb_to_scan_lut[code];
+}
+
+static inline char usb_to_ascii_keycode(uint8_t code, uint8_t modifiers) {
     char result;
     if ((modifiers & M_ANYCTRL) != 0) {
         // We don't want caps to modify this, so just return it
@@ -135,6 +192,91 @@ static inline char map_usb_keycode(uint8_t code, uint8_t modifiers) {
     }
 
     return result;
+}
+
+static inline void handle_key_scan(uint8_t this_key, bool make) {
+    char mapped;
+
+    mapped = usb_to_scan_code(this_key);
+
+    if (mapped) {
+        putchar(make ? mapped | RS_M_MAKE : mapped);
+    }
+}
+
+#define HANDLE_MOD_SCAN(key)                                                    \
+    if ((mod = (mods & M_##key)) != (last_mods & M_##key)) {                    \
+        if (mod) {                                                              \
+            putchar(RS_##key | RS_M_MAKE);                                      \
+        } else {                                                                \
+            putchar(RS_##key);                                                  \
+        }                                                                       \
+    }
+
+static inline void handle_mods_scan(uint8_t mods) {
+    uint8_t mod;
+
+    if (last_mods == mods) {
+        // no changes, short circuit
+        return;
+    }
+
+    HANDLE_MOD_SCAN(LCTRL);
+    HANDLE_MOD_SCAN(RCTRL);
+    HANDLE_MOD_SCAN(LSHIFT);
+    HANDLE_MOD_SCAN(RSHIFT);
+    HANDLE_MOD_SCAN(LALT);
+    HANDLE_MOD_SCAN(RALT);
+    HANDLE_MOD_SCAN(LGUI);
+    HANDLE_MOD_SCAN(RGUI);
+
+    last_mods = mods;
+}
+
+static inline void handle_key_ascii(uint8_t this_key, uint8_t modifiers) {
+    char mapped;
+
+    switch (this_key) {
+    case K_CAPS:
+        caps = !caps;
+        break;
+    case K_BACKSPACE:
+        putchar(0x08);
+        putchar(0x20);
+        putchar(0x08);
+        break;
+    case K_LEFT:
+        putchar(0x1b);
+        putchar('[');
+        putchar('D');
+        break;
+    case K_RIGHT:
+        putchar(0x1b);
+        putchar('[');
+        putchar('C');
+        break;
+    case K_DOWN:
+        putchar(0x1b);
+        putchar('[');
+        putchar('B');
+        break;
+    case K_UP:
+        putchar(0x1b);
+        putchar('[');
+        putchar('A');
+        break;
+    default:
+        mapped = usb_to_ascii_keycode(this_key, modifiers);
+
+        if (mapped) {
+            DEBUGF("Mapped key 0x%02x to %c\n", this_key, mapped);
+            putchar(mapped);
+        } else {
+            DEBUGF("WARN: unhandled & unmapped key 0x%02x\n", this_key);
+        }
+        
+        break;
+    }
 }
 
 void hid_handler(uint8_t type, uint16_t payload_len, uint8_t *payload) {
@@ -159,64 +301,39 @@ void hid_handler(uint8_t type, uint16_t payload_len, uint8_t *payload) {
                 uint8_t last_key = last_keys[i];
 
                 if (last_key) {
-                    if (memchr(&payload[2], last_key, 6) == NULL) {
+                    if (memchr(&payload[PAYLOAD_KEY0_IDX], last_key, 6) == NULL) {
                         // key no longer pressed
                         key_times[last_key] = 0;
+
+                        if (cmd_key_mode == IDENT_MODE_SCAN) {
+                            handle_key_scan(last_key, false);
+                        }
                     }
                 }
             }
 
+            if (cmd_key_mode == IDENT_MODE_SCAN) {
+                handle_mods_scan(payload[PAYLOAD_MODS_IDX]);
+            }
+
             // update key times for newly-pressed keys in packet
             for (int i = 2; i < 8; i++) {
-                // unrolled loop, we can do better than this...
                 uint8_t this_key = payload[i];
 
                 if (this_key) {
                     if (memchr(last_keys, this_key, 6) == NULL) {
                         // key newly pressed
                         key_times[this_key] = now;
-                        char mapped;
 
-                        // handle this key
-                        switch (this_key) {
-                        case K_CAPS:
-                            caps = !caps;
+                        switch (cmd_key_mode) {
+                        case IDENT_MODE_SCAN:
+                            handle_key_scan(this_key, true);
                             break;
-                        case K_BACKSPACE:
-                            putchar(0x08);
-                            putchar(0x20);
-                            putchar(0x08);
-                            break;
-                        case K_LEFT:
-                            putchar(0x1b);
-                            putchar('[');
-                            putchar('D');
-                            break;
-                        case K_RIGHT:
-                            putchar(0x1b);
-                            putchar('[');
-                            putchar('C');
-                            break;
-                        case K_DOWN:
-                            putchar(0x1b);
-                            putchar('[');
-                            putchar('B');
-                            break;
-                        case K_UP:
-                            putchar(0x1b);
-                            putchar('[');
-                            putchar('A');
+                        case IDENT_MODE_ASCII:
+                            handle_key_ascii(this_key, payload[PAYLOAD_MODS_IDX]);
                             break;
                         default:
-                            mapped = map_usb_keycode(this_key, payload[0]);
-
-                            if (mapped) {
-                                DEBUGF("Mapped key 0x%02x to %c\n", this_key, mapped);
-                                putchar(mapped);
-                            } else {
-                                DEBUGF("WARN: unhandled & unmapped key 0x%02x\n", this_key);
-                            }
-                            
+                            DEBUGF("WARN: Unrecognised mode 0x%02x\n", cmd_key_mode);
                             break;
                         }
                     }
@@ -224,10 +341,15 @@ void hid_handler(uint8_t type, uint16_t payload_len, uint8_t *payload) {
             }
 
             // Make a note of the pressed keys for next time around...
-            memcpy(last_keys, &payload[2], 6);
+            memcpy(last_keys, &payload[PAYLOAD_KEY0_IDX], 6);
         } else {
             DEBUGF(" with bad length - WARN: ignored\n");
         }
+    } else if (type == DEVICE_TYPE_MOUSE) {
+        DEBUGF("Unhandled mouse packet!\n");
+        
+        // TODO
+
     } else {
         DEBUGF("Non keyboard packet!\n");
     }
