@@ -13,13 +13,16 @@ typedef unsigned char  __data             UINT8D;
 #include "uart.h"
 #include "command.h"
 
+#define WDOG_1_4s_12M   0x80
+
 SBIT(LED, 0x90, 6);
 
 void main()
 {
     unsigned char s;
-    initClock();    
-    init_state();
+    initClock();
+    initWatchdog(WDOG_1_4s_12M);
+    init_state();    
     initUART0(115200, 1);
     DEBUG_OUT("Startup\n");
     resetHubDevices(0);
@@ -34,5 +37,6 @@ void main()
         processUart();
         s = checkRootHubConnections();
         pollHIDdevice();
+        WDOG_COUNT = WDOG_1_4s_12M;
     }
 }

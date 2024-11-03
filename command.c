@@ -26,6 +26,7 @@
 
 #define __COMPILE_COMMAND_C
 
+#include "CH559.h"
 #include "command.h"
 
 static uint8_t current_command;
@@ -155,7 +156,7 @@ void process_command(int byte) {
 #endif
         case CMD_RESET:
             putchar(CMD_ACK);
-            // wdt_enable(WDTO_15MS);
+            WDOG_COUNT = 0xff;      // Reset on next watchdog tick...
             while (1);
         case CMD_IDENT:
             putchar('r');

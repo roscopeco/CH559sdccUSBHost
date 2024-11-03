@@ -21,6 +21,18 @@ void initClock()
 	delay(7);
 }
 
+void initWatchdog(uint8_t initial)
+{
+    SAFE_MOD = 0x55;
+    SAFE_MOD = 0xAA;
+    
+    WDOG_COUNT = initial;
+    
+    GLOBAL_CFG |= bWDOG_EN;    
+    
+    SAFE_MOD = 0x00;
+}
+
 /**
  * Initialize UART0 port with given boud rate
  * pins: tx = P3.1 rx = P3.0

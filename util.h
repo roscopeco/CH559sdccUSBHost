@@ -8,6 +8,7 @@
 #endif
 
 void initClock();
+void initWatchdog(uint8_t initial);
 void delayUs(unsigned short n);
 void delay(unsigned short n);
 void initUART0(unsigned long baud, int alt);
