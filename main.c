@@ -17,7 +17,7 @@ typedef unsigned char  __data             UINT8D;
 
 SBIT(LED, 0x90, 6);
 
-void main()
+void main(void)
 {
     unsigned char s;
     initClock();

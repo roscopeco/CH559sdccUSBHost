@@ -41,15 +41,7 @@ uint8_t cmd_repeat_rate_limit;
 
 int putchar(int c);
 
-static inline void led_set(const uint8_t led_mask, uint8_t brightness) {
-    // TODO
-}
-
-static inline void pow_set(const uint8_t led_mask, uint8_t brightness) {
-    // TODO
-}
-
-void init_state() {
+void init_state(void) {
     cmd_key_mode = IDENT_MODE_ASCII;
     cmd_i2c_mode = false;
     cmd_enable_mouse_reports = false;
@@ -85,75 +77,26 @@ void process_command(int byte) {
             putchar(CMD_ACK);
             break;
         case CMD_MOUSE_DETECT:
-            // if (!i2c_mode) {
-            //     if (mouse.initialise() == 0) {  // 0 == ok, else timeout
-            //         have_mouse = true;
-            //         putchar(CMD_ACK);
-            //     } else {
-            //         putchar(CMD_NAK);
-            //     }
-            // } else {
-            //     putchar(CMD_NAK);
-            // }
-            putchar(CMD_NAK);
+            cmd_have_mouse = true;
+            putchar(CMD_ACK);
             break;
         case CMD_MOUSE_STRM_ON:
-            // if (!i2c_mode && !uart_mode) {
-            //     if (mouse.initialise() == 0) {  // 0 == ok, else timeout
-            //         have_mouse = true;
-            //         enable_mouse_reports = true;
-            //         putchar(CMD_ACK);
-            //     } else {
-            //         // In case we're reinitializing after unplug and haven't noticed yet...
-            //         have_mouse = false;
-            //         enable_mouse_reports = false;
-            //         putchar(CMD_NAK);
-            //     }
-            // } else {
-            //     putchar(CMD_NAK);
-            // }
-            putchar(CMD_NAK);
+            cmd_have_mouse = true;
+            cmd_enable_mouse_reports = true;
+            putchar(CMD_ACK);
             break;
         case CMD_MOUSE_STRM_OFF:
                 cmd_enable_mouse_reports = false;
                 putchar(CMD_ACK);
             break;
+
+        // TODO not supported
         case CMD_MOUSE_REPORT:
-            // if (i2c_mode) {
-            //     putchar(CMD_NAK);
-            // } else {
-            //     if (!have_mouse) {
-            //         if (mouse.initialise() != 0) {  // 0 == ok, else timeout
-            //             putchar(CMD_NAK);
-            //             break;
-            //         }
-
-            //         have_mouse = true;
-            //     }
-
-            //     if (service_mouse()) {
-            //         putchar(CMD_ACK);
-            //     } else {
-            //         putchar(CMD_NAK);
-            //     }
-            // }
-            putchar(CMD_NAK);
-
-            break;
-#ifdef REVISION_2
         case CMD_SPI_ENABLE:
-            if (uart_mode) {
-                putchar(CMD_NAK);
-            } else {
-                enable_spi_reports = true;
-                putchar(CMD_ACK);
-            }
-            break;
         case CMD_SPI_DISABLE:
-            enable_spi_reports = false;
             putchar(CMD_ACK);
             break;
-#endif
+
         case CMD_RESET:
             putchar(CMD_ACK);
             WDOG_COUNT = 0xff;      // Reset on next watchdog tick...
@@ -171,13 +114,7 @@ void process_command(int byte) {
             putchar(cmd_key_mode);            
             putchar(KEY_COUNT);
             putchar(LED_COUNT);
-
-            if (cmd_i2c_mode) {
-                putchar(CAPABILITIES | CAP_I2C);
-            } else {
-                putchar(CAPABILITIES | CAP_PS2);
-            }
-
+            putchar(CAPABILITIES);
             putchar((uint8_t)0);
             putchar((uint8_t)0);
             putchar(CMD_ACK);
@@ -189,43 +126,35 @@ void process_command(int byte) {
         // operand
         switch (current_command) {
         case CMD_LED_POWRED:
-            pow_set(POW_RED, byte);
             putchar(CMD_ACK);
             current_command = 0;
             break;
         case CMD_LED_POWGRN:
-            pow_set(POW_GRN, byte);
             putchar(CMD_ACK);
             current_command = 0;
             break;
         case CMD_LED_POWBLU:
-            pow_set(POW_BLU, byte);
             putchar(CMD_ACK);
             current_command = 0;
             break;
         case CMD_LED_CAPS:
-            led_set(LED_CAPS, byte);
             cmd_uart_caps_led_on = byte > 0;
             putchar(CMD_ACK);
             current_command = 0;
             break;
         case CMD_LED_DISK:
-            led_set(LED_DISK, byte);
             putchar(CMD_ACK);
             current_command = 0;
             break;
         case CMD_LED_EXTRED:
-            led_set(LED_EXTRED, byte);
             putchar(CMD_ACK);
             current_command = 0;
             break;
         case CMD_LED_EXTGRN:
-            led_set(LED_EXTGRN, byte);
             putchar(CMD_ACK);
             current_command = 0;
             break;
         case CMD_LED_EXTBLU:
-            led_set(LED_EXTBLU, byte);
             putchar(CMD_ACK);
             current_command = 0;
             break;

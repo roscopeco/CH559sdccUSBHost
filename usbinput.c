@@ -15,6 +15,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "command.h"
@@ -31,6 +32,7 @@
 #define DEBUGF(...)     (void)0
 #endif
 
+// Keyb
 #define PAYLOAD_MODS_IDX    0
 #define PAYLOAD_KEY0_IDX    2
 
@@ -70,6 +72,17 @@
 
 // rosco scancode modifier for make codes
 #define RS_M_MAKE   0x80
+
+// Mouse
+#define PAYLOAD_BTN_IDX     1
+#define PAYLOAD_XOF_IDX     3
+#define PAYLOAD_YOF_IDX     4
+#define PAYLOAD_ZOF_IDX     6
+
+#define USB_MOUSE_BTN_MASK  0x7
+
+#define PS2_MOUSE_XS_BIT    0x10
+#define PS2_MOUSE_YS_BIT    0x20
 
 static const char usb_to_scan_lut[] = {
     0x00, 0x00, 0x00, 0x00, 0x32, 0x47, 0x45, 0x34, 0x24, 0x35, 0x36, 0x37, 0x29, 0x38, 0x39, 0x3a, 
@@ -200,7 +213,7 @@ static inline void handle_key_scan(uint8_t this_key, bool make) {
     mapped = usb_to_scan_code(this_key);
 
     if (mapped) {
-        putchar(make ? mapped | RS_M_MAKE : mapped);
+        putchar(make ? (mapped | RS_M_MAKE) : mapped);
     }
 }
 
@@ -345,12 +358,27 @@ void hid_handler(uint8_t type, uint16_t payload_len, uint8_t *payload) {
         } else {
             DEBUGF(" with bad length - WARN: ignored\n");
         }
-    } else if (type == DEVICE_TYPE_MOUSE) {
-        DEBUGF("Unhandled mouse packet!\n");
-        
-        // TODO
+    } else if (type == DEVICE_TYPE_MOUSE && cmd_key_mode == IDENT_MODE_SCAN) {
+        uint8_t buttons = payload[PAYLOAD_BTN_IDX];
+        uint8_t status = buttons & USB_MOUSE_BTN_MASK;
+        int8_t x = payload[PAYLOAD_XOF_IDX];
+        int8_t y = payload[PAYLOAD_YOF_IDX];
+        uint8_t z = payload[PAYLOAD_ZOF_IDX];
 
+        if (x < 0) {
+            status |= PS2_MOUSE_XS_BIT;
+        }
+
+        if (y < 0) {
+            status |= PS2_MOUSE_YS_BIT;
+        }
+
+        putchar(PS2_PKT_START_CODE);
+        putchar(status);
+        putchar((uint8_t)abs(x));      // Sign/overflow represented in status....
+        putchar((uint8_t)abs(y));
+        putchar(z);
     } else {
-        DEBUGF("Non keyboard packet!\n");
+        DEBUGF("Unhandled packet type 0x%02x!\n", type);
     }
 }

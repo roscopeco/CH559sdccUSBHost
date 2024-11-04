@@ -7,7 +7,7 @@ FunctionReference runBootloader = (FunctionReference)0xF400;
 #define	FREQ_SYS	48000000
 #endif 
 
-void initClock()
+void initClock(void)
 {
     SAFE_MOD = 0x55;
     SAFE_MOD = 0xAA;
@@ -66,7 +66,7 @@ void initUART0(unsigned long baud, int alt)
 	TI = 1;
 }
 
-unsigned char UART0Receive()
+unsigned char UART0Receive(void)
 {
     while(RI == 0);
     RI = 0;
@@ -157,7 +157,7 @@ int putchar(int c)
     return c;
 }
 
-int getchar() 
+int getchar(void) 
 {
     while(!RI);
     RI = 0;

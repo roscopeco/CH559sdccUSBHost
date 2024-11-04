@@ -7,12 +7,12 @@
 #define DEBUG_OUT(...) (void)0;
 #endif
 
-void initClock();
+void initClock(void);
 void initWatchdog(uint8_t initial);
 void delayUs(unsigned short n);
 void delay(unsigned short n);
 void initUART0(unsigned long baud, int alt);
-unsigned char UART0Receive();
+unsigned char UART0Receive(void);
 void UART0Send(unsigned char b);
 
 #define PIN_MODE_INPUT 0
@@ -24,7 +24,7 @@ void UART0Send(unsigned char b);
 #define PIN_MODE_INPUT_OUTPUT_PULLUP_2CLK 6
 void pinMode(unsigned char port, unsigned char pin, unsigned char mode);
 
-typedef void(* __data FunctionReference)();
+typedef void(* __data FunctionReference)(void);
 extern FunctionReference runBootloader;
 
 #endif

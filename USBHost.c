@@ -44,7 +44,7 @@ void disableRootHubPort(unsigned char index)
 	UHUB0_CTRL = 0;
 }
 
-void initUSB_Host()
+void initUSB_Host(void)
 {
 	IE_USB = 0;
 	USB_CTRL = bUC_HOST_MODE;
@@ -342,7 +342,7 @@ void fillTxBuffer(PUINT8C data, unsigned char len)
 	DEBUG_OUT("fillTxBuffer done\n", len);
 }
 
-unsigned char getDeviceDescriptor()
+unsigned char getDeviceDescriptor(void)
 {
     unsigned char s;
     unsigned short len;
@@ -385,7 +385,7 @@ unsigned char setUsbConfig( unsigned char cfg )
     return( hostCtrlTransfer(0, 0, 0) );            
 }
 
-unsigned char getDeviceString()
+unsigned char getDeviceString(void)
 {
     fillTxBuffer(GetDeviceStringRequest, sizeof(GetDeviceStringRequest));                         
     return hostCtrlTransfer(receiveDataBuffer, 0, RECEIVE_BUFFER_LEN);
@@ -416,7 +416,7 @@ void DEBUG_OUT_USB_BUFFER(unsigned char __xdata *usbBuffer)
 	DEBUG_OUT("\n");
 }
 
-unsigned char getConfigurationDescriptor()
+unsigned char getConfigurationDescriptor(void)
 {
     unsigned char s;
     unsigned short len, total;
@@ -536,7 +536,7 @@ void resetHubDevices(unsigned char hubindex)
 	}
 }
 
-void pollHIDdevice()
+void pollHIDdevice(void)
 {
 	 __xdata unsigned char s, hiddevice, len;
 	for (hiddevice = 0; hiddevice < MAX_HID_DEVICES; hiddevice++)
@@ -764,7 +764,7 @@ void readHIDInterface(PXUSB_ITF_DESCR interface, PXUSB_HID_DESCR descriptor)
 	DEBUG_OUT("  TypeX 0x%02X\n", descriptor->bDescriptorTypeX);
 }
 
-void readEndpoint()
+void readEndpoint(void)
 {
 }
 
@@ -915,7 +915,7 @@ unsigned char initializeRootHubConnection(unsigned char rootHubIndex)
 	return s;
 }
 
-unsigned char checkRootHubConnections()
+unsigned char checkRootHubConnections(void)
 {
 	unsigned char s;
 	s = ERR_SUCCESS;

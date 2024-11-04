@@ -11,7 +11,7 @@
 // uint8_t __xdata uartRxBuff[64];
 // uint8_t __xdata rxPos = 0;
 
-void processUart(){
+void processUart(void){
     while(RI){
 		RI = 0;
 		process_command(SBUF);

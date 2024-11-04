@@ -49,11 +49,9 @@
 #define CMD_MOUSE_SET_RATE  0x24
 #define CMD_MOUSE_SET_RES   0x25
 #define CMD_MOUSE_SET_SCALE 0x26
-#ifdef REVISION_2
 // 0x23 - 0x2f reserved...
 #define CMD_SPI_ENABLE      0x30
 #define CMD_SPI_DISABLE     0x31
-#endif
 // 0x32 - 0xef reserved...
 #define CMD_IDENT           0xf0
 #define CMD_RESET           0xf1
@@ -71,21 +69,17 @@
 #define CMD_MOUSE_SCL_21    0x02
 
 #define KEY_COUNT           ((uint8_t)67)
-#define LED_COUNT           ((uint8_t)8)
+#define LED_COUNT           ((uint8_t)1)
 
 #define CAP_KBD             0x01
 #define CAP_SPI             0x02
 #define CAP_I2C             0x04
 #define CAP_PWM             0x08
 #define CAP_PS2             0x10
+#define CAP_USB             0x20
 #define CAP_RESERVED        0x80    // Must never be set!
 
-// For these, I2C or PS2 are added later depending on jumper config...
-#ifdef REVISION_2
-#define CAPABILITIES        ((uint8_t)(CAP_KBD | CAP_SPI | CAP_PWM))
-#else
-#define CAPABILITIES        ((uint8_t)(CAP_KBD | CAP_SPI))
-#endif
+#define CAPABILITIES        ((uint8_t)(CAP_KBD | CAP_PS2 | CAP_USB))
 
 #define IDENT_MODE_SCAN     ((uint8_t)0)
 #define IDENT_MODE_ASCII    ((uint8_t)1)
