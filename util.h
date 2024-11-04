@@ -15,16 +15,6 @@ void initUART0(unsigned long baud, int alt);
 unsigned char UART0Receive();
 void UART0Send(unsigned char b);
 
-// The following routines require timer 0 to be initialized...
-// Timer resolution is 10ms...
-void initTimer0(void);
-
-// Get current system ticks
-uint32_t getSystemTicks(void);
-
-// Calculate elapsed milliseconds since start tick
-uint32_t getElapsedMs(uint32_t startTick);
-
 #define PIN_MODE_INPUT 0
 #define PIN_MODE_INPUT_PULLUP 1
 #define PIN_MODE_OUTPUT 2
