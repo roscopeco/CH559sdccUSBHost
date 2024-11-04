@@ -172,10 +172,7 @@ static const char usb_to_ascii_ctrl_lut[] = {
 // codes and times separately, but it'd be slower. Might be acceptable
 // though (and save us nearly a KiB)...
 //
-// ALSO TODO can't actually fit 1KB in CH559 RAM, probably have to use the slower
-// method...
-//
-static uint8_t key_times[256];
+static uint32_t __xdata key_times[256];
 
 static uint8_t  last_keys[6];       // 6KRO with boot protocol
 
